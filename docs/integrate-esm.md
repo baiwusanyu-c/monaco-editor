@@ -17,7 +17,7 @@ More self-contained samples are available in the [samples folder](../samples/).
 ### Option 1: Using the Monaco Editor WebPack Plugin
 
 This is the easiest method, and it allows for options to be passed into the plugin in order to select only a subset of editor features or editor languages. Read more about the [Monaco Editor WebPack Plugin](../webpack-plugin/), which is a community authored plugin.
-
+// bwsy: 在 webpack 中使用 monaco-editor-webpack-plugin，来代替 loader，以便选择编辑器的各种功能和语言集
 - `index.js`
 
 ```js
@@ -60,7 +60,7 @@ module.exports = {
 ---
 
 ### Option 2: Using plain webpack
-
+// bwsy: 在 webpack 中不使用插件，常规方法使用 monaco 编辑器
 Full working samples are available at https://github.com/microsoft/monaco-editor/tree/main/samples/browser-esm-webpack or https://github.com/microsoft/monaco-editor/tree/main/samples/browser-esm-webpack-small
 
 - `index.js`
@@ -71,6 +71,7 @@ import * as monaco from 'monaco-editor';
 // Since packaging is done by you, you need
 // to instruct the editor how you named the
 // bundles that contain the web workers.
+// bwsy: 指定包含哪些语言集
 self.MonacoEnvironment = {
 	getWorkerUrl: function (moduleId, label) {
 		if (label === 'json') {
@@ -103,6 +104,7 @@ const path = require('path');
 module.exports = {
 	entry: {
 		app: './index.js',
+        //  bwsy: 在打包配置的入口中 添加 monaco 编辑器的相关 worker，至少要包含 editor 的 worker 和语言集的 worker
 		// Package each language's worker and give these filenames in `getWorkerUrl`
 		'editor.worker': 'monaco-editor/esm/vs/editor/editor.worker.js',
 		'json.worker': 'monaco-editor/esm/vs/language/json/json.worker',
@@ -190,6 +192,7 @@ _note - the `getWorkerUrl` paths are relative to the build directory of your src
 
 Adding monaco editor to [Vite](https://vitejs.dev/) is simple since it has built-in support for web workers. You only need to implement the `getWorker` function (NOT the `getWorkerUrl`) to use Vite's output ([Source](https://github.com/vitejs/vite/discussions/1791#discussioncomment-321046)):
 
+// bwsy：TODO： 对比一下  plain webpack 和 vite 的区别
 ```js
 import * as monaco from 'monaco-editor';
 

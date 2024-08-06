@@ -72,19 +72,19 @@ Many Monaco related objects often implement the `.dispose()` method. This method
 
 ## Documentation
 
-//  bwsy: 完整的集成学校样例
+//  bwsy: ✅完整的集成学校样例
 - Learn how to integrate the editor with these [complete samples](./samples/).
-  //  bwsy: amd 的集成样例
+  //  bwsy: ✅amd 的集成样例
   - [Integrate the AMD version](./docs/integrate-amd.md).
-  //  bwsy: esm 的集成样例
+  //  bwsy: ✅esm 的集成样例
   - [Integrate the ESM version](./docs/integrate-esm.md)
-  //  bwsy: 学校如何使用 api 请参阅 playground
+  //  bwsy: ✅学习如何使用 api 请参阅 playground
 - Learn how to use the editor API and try out your own customizations in the [playground](https://microsoft.github.io/monaco-editor/playground.html).
-  //  bwsy: 完整的 api 接口定义
+  //  bwsy: 🚧完整的 api 接口定义
 - Explore the [API docs](https://microsoft.github.io/monaco-editor/docs.html) or read them straight from [`monaco.d.ts`](https://github.com/microsoft/monaco-editor/blob/gh-pages/node_modules/monaco-editor/monaco.d.ts).
- //  bwsy: 集成指南
+ //  bwsy: ✅集成指南
 - Read [this guide](https://github.com/microsoft/monaco-editor/wiki/Accessibility-Guide-for-Integrators) to ensure the editor is accessible to all your users!
-  //  bwsy: 创建 Monarch tokenizer 来实现一个新的编程语言支持
+  //  bwsy: 4🎯创建 Monarch tokenizer 来实现一个新的编程语言支持
 - Create a Monarch tokenizer for a new programming language [in the Monarch playground](https://microsoft.github.io/monaco-editor/monarch.html).
 - Ask questions on [StackOverflow](https://stackoverflow.com/questions/tagged/monaco-editor)! Search open and closed issues, there are a lot of tips in there!
 
@@ -110,6 +110,7 @@ No.
 
 ❓ **Why all these web workers and why should I care?**
 
+// bwsy：worker 是 monaco 编辑器运行时的执行的方式，一些繁重的工作将在 worker 中执行以减少计算消耗，避免阻塞 UI 渲染线程
 Language services create web workers to compute heavy stuff outside of the UI thread. They cost hardly anything in terms of resource overhead and you shouldn't worry too much about them, as long as you get them to work (see above the cross-domain case).
 
 ❓ **What is this `loader.js`? Can I use `require.js`?**
