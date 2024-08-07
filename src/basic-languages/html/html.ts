@@ -96,7 +96,7 @@ export const conf: languages.LanguageConfiguration = {
 // 第一个空格字符，匹配 B 规则，此时状态机 标记状态为 comment.content，由于我们没有 comment.content
 // 的相关状态规则，即在 comment 状态中我们遍历处理 comment 状态和 comment.content
 // 标记消费后，继续进行匹配，接下来的 c, o, m, m, e, n, t 和 第二个空格都会匹配规则 B，依旧是 comment.content 状态。
-// 当匹配到字符 - 时，先匹配 /-->/, 状态机会尽可能匹配长的字符串，因此当字符串后续是字符 - 和 > 则会匹配规则 A
+// 当匹配到字符 - 时，先匹配 /-->/, 状态机会尽可能匹配长的字符串，因此当字符串后续是字符 - 和 > 则会匹配规则 A(最终 pop 回到初始状态)
 // 反之 若是字符串 -x，则不会匹配 规则 A，那么 - 字符会继续去匹配规则，即匹配到 规则 C
 // 如果调换顺序
 // 			B [/[^-]+/, 'comment.content'],
@@ -120,7 +120,19 @@ export const language = <languages.IMonarchLanguage>{
 			// action 为 comment （是主题中定义的类名）
 			// next 为 引用名为 comment 的 tokenizer
 			[/<!--/, 'comment', '@comment'],
+			// rules 匹配自闭合的标签，举例 <foo:bar />
+			// (<) 匹配自闭合标签的开始部分，<
+			// ((?:[\w\-]+:)?[\w\-]+) 匹配标签名 foo:bar
+			// (\s*) 匹配任何标签名和自闭合斜杠之间的空白
+			// (\/>) 匹配自闭合标签的结束部分，包括斜杠 / 和右尖括号 >
+			// action 为 delimiter, tag，'', delimiter
 			[/(<)((?:[\w\-]+:)?[\w\-]+)(\s*)(\/>)/, ['delimiter', 'tag', '', 'delimiter']],
+			// rules 匹配 script 标签
+			// 这里要匹配完整的 <script 同时又设置不同的 action 所以 使用的是 (<)(script)，将其捕获
+			// 捕获组 [ '<script', '<', 'script', index: 0, input: '<script>', groups: undefined ]
+			// 而如果使用 /<script/ 则没有捕获组
+			// [ '<script', index: 0, input: '<script>', groups: undefined ]
+			// 所以最终 < 的 action 是 delimiter，而 script 的 action 是 tag 同时 状态机切换到 script 状态
 			[/(<)(script)/, ['delimiter', { token: 'tag', next: '@script' }]],
 			[/(<)(style)/, ['delimiter', { token: 'tag', next: '@style' }]],
 			[/(<)((?:[\w\-]+:)?[\w\-]+)/, ['delimiter', { token: 'tag', next: '@otherTag' }]],
@@ -167,11 +179,30 @@ export const language = <languages.IMonarchLanguage>{
 
 		// After <script
 		script: [
+			// rules 匹配双引号 " 包裹的字符串内容，捕获的内容不包括引号本身
+			// action 为 attribute.name, 并切换到 @scriptAfterType状态
 			[/type/, 'attribute.name', '@scriptAfterType'],
+			// rules 匹配双引号 " 包裹的字符串内容，捕获的内容不包括引号本身
+			// action 为 attribute.value
+			// 例如 type="text/javascript" 中的 text/javascript。
 			[/"([^"]*)"/, 'attribute.value'],
+			// rules 匹配单引号 ' 包裹的字符串内容，捕获的内容不包括引号本身
+			// action 为 attribute.value
+			// 例如 type='text/javascript' 中的 text/javascript。
 			[/'([^']*)'/, 'attribute.value'],
+			// rules 匹配一个或多个字母、数字、下划线 _ 或连字符 -
+			// 这里不包括 type，因为在第一条规则中已经匹配了
+			// action 为 attribute.name
+			// 例如 src
 			[/[\w\-]+/, 'attribute.name'],
+			// rules 匹配 =
+			// 这里不包括 type=，因为在第一条规则中已经匹配了
+			// action 为 delimiter
 			[/=/, 'delimiter'],
+			// rules 匹配 > , 这里表示 script 开始标签的结束符 >
+			// action 为 delimiter, 并切换到 scriptEmbedded 状态
+			// nextEmbedded 向编辑器表示，这个令牌后面跟着由langId指定的另一种语言的代码，例如javascript
+			// 这里的意思是，<script > 后的内容是 js 代码，是另一种语言
 			[
 				/>/,
 				{
@@ -180,13 +211,20 @@ export const language = <languages.IMonarchLanguage>{
 					nextEmbedded: 'text/javascript'
 				}
 			],
+			// rules 配消费空格和转义符
 			[/[ \t\r\n]+/], // whitespace
+			// rules 捕获 </script>, 也捕获有 script 后的任意字符
+			// 分别对 < , script ** , > 设置 action 为 delimiter， tag， delimiter，
+			// 并在 > 时 pop 回到初始状态
 			[/(<\/)(script\s*)(>)/, ['delimiter', 'tag', { token: 'delimiter', next: '@pop' }]]
 		],
 
 		// After <script ... type
 		scriptAfterType: [
+			// rules 匹配 =
+			// action 为 delimiter, 并切换到 @scriptAfterTypeEquals 状态
 			[/=/, 'delimiter', '@scriptAfterTypeEquals'],
+			// 同 script tokenizer
 			[
 				/>/,
 				{
@@ -195,7 +233,10 @@ export const language = <languages.IMonarchLanguage>{
 					nextEmbedded: 'text/javascript'
 				}
 			], // cover invalid e.g. <script type>
+
+			// 同 script tokenizer
 			[/[ \t\r\n]+/], // whitespace
+			// @rematch 标识不消费字符串，回到 script 状态去处理
 			[/<\/script\s*>/, { token: '@rematch', next: '@pop' }]
 		],
 
@@ -203,6 +244,9 @@ export const language = <languages.IMonarchLanguage>{
 		scriptAfterTypeEquals: [
 			[
 				/"module"/,
+				// rules: 匹配双引号 module
+				// action 为 attribute.value
+				// switchTo 在不改变堆栈的情况下切换到状态 scriptWithCustomType
 				{
 					token: 'attribute.value',
 					switchTo: '@scriptWithCustomType.text/javascript'
@@ -210,6 +254,9 @@ export const language = <languages.IMonarchLanguage>{
 			],
 			[
 				/'module'/,
+				// rules: 匹配单引号 module
+				// action 为 attribute.value
+				// switchTo 在不改变堆栈的情况下切换到状态 scriptWithCustomType
 				{
 					token: 'attribute.value',
 					switchTo: '@scriptWithCustomType.text/javascript'
@@ -217,6 +264,10 @@ export const language = <languages.IMonarchLanguage>{
 			],
 			[
 				/"([^"]*)"/,
+				// rules: 匹配双引号包裹的任意内容，并捕获内容到 $1
+				// (Monarch 规范， @scriptWithCustomType.$1 变成 @scriptWithCustomType.xxxx， 即引号内容)
+				// action 为 attribute.value
+				// switchTo 在不改变堆栈的情况下切换到状态 scriptWithCustomType
 				{
 					token: 'attribute.value',
 					switchTo: '@scriptWithCustomType.$1'
@@ -224,11 +275,16 @@ export const language = <languages.IMonarchLanguage>{
 			],
 			[
 				/'([^']*)'/,
+				// rules: 匹配单引号包裹的任意内容，并捕获内容到 $1
+				// (Monarch 规范， @scriptWithCustomType.$1 变成 @scriptWithCustomType.xxxx， 即引号内容)
+				// action 为 attribute.value
+				// switchTo 在不改变堆栈的情况下切换到状态 scriptWithCustomType
 				{
 					token: 'attribute.value',
 					switchTo: '@scriptWithCustomType.$1'
 				}
 			],
+			// 同 script tokenizer
 			[
 				/>/,
 				{
@@ -237,12 +293,19 @@ export const language = <languages.IMonarchLanguage>{
 					nextEmbedded: 'text/javascript'
 				}
 			], // cover invalid e.g. <script type=>
+			// 同 script tokenizer
 			[/[ \t\r\n]+/], // whitespace
+			// @rematch 标识不消费字符串，回到 script 状态去处理
 			[/<\/script\s*>/, { token: '@rematch', next: '@pop' }]
 		],
 
 		// After <script ... type = $S2
 		scriptWithCustomType: [
+			// 遇到 > 即表示 script 开始标签的结束符号，
+			// $S2 值是 scriptAfterTypeEquals 状态捕获的 type = 'xxx' 中的值
+			// 即如果是 module，scriptAfterTypeEquals 中会转化为 text/javascript
+			// 那么字符匹配到 > 时，实际上就切换到 scriptEmbedded 状态并当做 js 处理（nextEmbedded: text/javascript）
+			// 如果 $S2 是其他字符比如 text/javascript， 就直接处理
 			[
 				/>/,
 				{
@@ -251,16 +314,33 @@ export const language = <languages.IMonarchLanguage>{
 					nextEmbedded: '$S2'
 				}
 			],
+			// rules: 匹配双引号包裹的任意内容，
+			// action： 为 attribute.value
+			// 此处是继续处理并消费 <script type=$2 ... >
+			// 省略号的部分（下同）
 			[/"([^"]*)"/, 'attribute.value'],
+			// rules: 匹配单引号包裹的任意内容，
+			// action： 为 attribute.value
 			[/'([^']*)'/, 'attribute.value'],
+			// rules: rules 匹配一个或多个字母、数字、下划线 _ 或连字符 -
+			// action： 为 attribute.name
 			[/[\w\-]+/, 'attribute.name'],
+			// rules 匹配 =
+			// action 为 delimiter
 			[/=/, 'delimiter'],
+			// 同 script tokenizer
 			[/[ \t\r\n]+/], // whitespace
+			// @rematch 标识不消费字符串，回到 script 状态去处理
 			[/<\/script\s*>/, { token: '@rematch', next: '@pop' }]
 		],
-
+		// scriptEmbedded 中会继续遍历消费字符串
+		// 如果js 字符串中包含 </script, 弹出为 script 状态，@rematch 标识不消费 字符串
+		// nextEmbedded 标识回到处理 html 的语言上
+		// 即在 script 状态再次以 html 处理方式 </script
+		// 此时 js 快中后续的 代码都会当做 html 处理，则变成了普通文本没有高亮(感觉是 bug)
 		scriptEmbedded: [
 			[/<\/script/, { token: '@rematch', next: '@pop', nextEmbedded: '@pop' }],
+			// 不处理其他的字符，匹配或不匹配
 			[/[^<]+/, '']
 		],
 
