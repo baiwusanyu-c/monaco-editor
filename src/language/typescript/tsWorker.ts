@@ -20,6 +20,7 @@ import { Uri, worker } from '../../fillers/monaco-editor-core';
  * See https://github.com/microsoft/monaco-editor/issues/2182
  */
 function fileNameIsLib(resource: Uri | string): boolean {
+	console.log('bai')
 	if (typeof resource === 'string') {
 		if (/^file:\/\/\//.test(resource)) {
 			return !!libFileMap[resource.substr(8)];

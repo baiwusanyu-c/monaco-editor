@@ -22,10 +22,15 @@ For a stable release, the commit specified in `vscodeRef` in [package.json](./pa
 // bwsy: 我们默认支持一些重要的语言，每一个语言的支持由下面几个文件
 Please understand that we only bundle languages with the monaco editor that have a significant relevance (for example, those that have an article in Wikipedia).
 
+// bwsy: 内含 registerLanguage 的调用，来向 monaco 注册一个语言
 - create `$/src/basic-languages/{myLang}/{myLang}.contribution.ts`
+  // bwsy: 语言集的定义，遵循 monarch 规范
 - create `$/src/basic-languages/{myLang}/{myLang}.ts`
+  // bwsy: 语言集测试文件
 - create `$/src/basic-languages/{myLang}/{myLang}.test.ts`
+  // bwsy: monaco.contribution.ts 中引入
 - edit `$/src/basic-languages/monaco.contribution.ts` and register your new language
+  // bwsy: sample.{myLang}.txt 添加语言集样例
 - create `$/website/index/samples/sample.{myLang}.txt`
 
 ```js

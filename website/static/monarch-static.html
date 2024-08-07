@@ -205,6 +205,7 @@ meta      .[content]</pre
 
 					<h3>States</h3>
 					<p>
+						// bwsy: 每一个 tokenizer 都由一个定义状态的对象构成
 						A tokenizer consists of an object that defines states.
 						The initial state of the tokenizer is the first state
 						defined in the tokenizer. When a tokenizer is in a
@@ -233,6 +234,7 @@ meta      .[content]</pre
 
 					<h3>Rules</h3>
 					<p>
+						// bwsy: 每一个状态则由一系列的规则构成的数组组成
 						Each state is defined as an array of rules which are
 						used to match the input. Rules can have the following
 						form:
@@ -262,6 +264,8 @@ meta      .[content]</pre
 							{regex: <em>regex</em>, action: <em>action</em> }
 						</dt>
 						<dd>
+							// bwsy: 当正则匹配时，则会为对应的 token 添加对应的 class，这就是 action 的作用，
+							正则可以是自己写的一个正则，也可以是来源于上下文中定义的`常规正则`(在正则内部@xxx 或者直接 @xxx)
 							When <code><em>regex</em></code> matches against the
 							current input, then <code><em>action</em></code> is
 							applied to set the token class. The regular
@@ -318,9 +322,10 @@ meta      .[content]</pre
 							<code>'@whitespace'</code> state for example.
 						</dd>
 					</dl>
-
+					// bwsy?: rules 中的 next， action ？{ token: 'regexp', bracket: '@open', next: '@regexp' }
 					<h3>Actions</h3>
 					<p>
+						bwsy: action 决定作用的 token 类，他可以是字符串/ action 组成的数组/ { token: tokenclass }
 						An action determines the resulting token class. An
 						action can have the following forms:
 					</p>
@@ -413,6 +418,7 @@ meta      .[content]</pre
 								attributes are recognized:
 							</p>
 							<dl>
+								// bwsy: 在 action 中，可以定义 next，他是一个 state ，他等同于 state 中的 next
 								<dt id="next">next: <em>state</em></dt>
 								<dd>
 									(string) If defined it pushes the current
@@ -619,6 +625,8 @@ css_block: [
 							<em>guardN</em>: <em>actionN</em> } }
 						</dt>
 						<dd>
+							// bwsy: case 是一个对象，每个字段充当守卫，每个守卫都会匹配输入，当有一个守卫
+							// 匹配了输入，就会执行相关操作.
 							The final kind of action object is a cases
 							statement. A cases object contains an object where
 							each field functions as a guard. Each guard is
