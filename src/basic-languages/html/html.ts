@@ -96,7 +96,8 @@ export const conf: languages.LanguageConfiguration = {
 // 第一个空格字符，匹配 B 规则，此时状态机 标记状态为 comment.content，由于我们没有 comment.content
 // 的相关状态规则，即在 comment 状态中我们遍历处理 comment 状态和 comment.content
 // 标记消费后，继续进行匹配，接下来的 c, o, m, m, e, n, t 和 第二个空格都会匹配规则 B，依旧是 comment.content 状态。
-// 当匹配到字符 - 时，在贪婪匹配的机制下，后续字符 -, > 也会进入状态机去匹配，最终 --> 匹配 规则 A
+// 当匹配到字符 - 时，先匹配 /-->/, 状态机会尽可能匹配长的字符串，因此当字符串后续是字符 - 和 > 则会匹配规则 A
+// 反之 若是字符串 -x，则不会匹配 规则 A，那么 - 字符会继续去匹配规则，即匹配到 规则 C
 // 如果调换顺序
 // 			B [/[^-]+/, 'comment.content'],
 // 			C [/./, 'comment.content']
