@@ -120,7 +120,8 @@ export const language = <languages.IMonarchLanguage>{
 			// action 为 comment （是主题中定义的类名）
 			// next 为 引用名为 comment 的 tokenizer
 			[/<!--/, 'comment', '@comment'],
-			// rules 匹配自闭合的标签，举例 <foo:bar />
+			// rules 匹配自闭合的标签，举例 <foo:bar />，
+			// 注意它匹配的自闭合标签是无属性的，<foo:bar id/> 是不匹配的
 			// (<) 匹配自闭合标签的开始部分，<
 			// ((?:[\w\-]+:)?[\w\-]+) 匹配标签名 foo:bar
 			// (\s*) 匹配任何标签名和自闭合斜杠之间的空白
@@ -134,10 +135,19 @@ export const language = <languages.IMonarchLanguage>{
 			// [ '<script', index: 0, input: '<script>', groups: undefined ]
 			// 所以最终 < 的 action 是 delimiter，而 script 的 action 是 tag 同时 状态机切换到 script 状态
 			[/(<)(script)/, ['delimiter', { token: 'tag', next: '@script' }]],
+			// rules 匹配 script 标签
+			// 所以最终 < 的 action 是 delimiter，而 style 的 action 是 tag 同时 状态机切换到 style 状态
 			[/(<)(style)/, ['delimiter', { token: 'tag', next: '@style' }]],
+			// rules 匹配非自闭合的标签的开始标签开始符，举例 <foo:bar
+			// action 为 delimiter, tag，并切换到 otherTag 状态
 			[/(<)((?:[\w\-]+:)?[\w\-]+)/, ['delimiter', { token: 'tag', next: '@otherTag' }]],
+			// rules 匹配非自闭合的标签的结束标签开始符，举例 </foo:bar
+			// action 为 delimiter, tag，并切换到 otherTag 状态
 			[/(<\/)((?:[\w\-]+:)?[\w\-]+)/, ['delimiter', { token: 'tag', next: '@otherTag' }]],
+			// rules 用来识别标签开始的符号 <
 			[/</, 'delimiter'],
+			// rules 匹配任何不包含 < 的一个或多个字符，
+			// 经过前面的规则过滤，能走到这条规则上的基本上就是 标签内的文本节点了
 			[/[^<]+/] // text
 		],
 
@@ -167,10 +177,24 @@ export const language = <languages.IMonarchLanguage>{
 		],
 
 		otherTag: [
+			// rules 匹配一个可能包含 / 的 > 符号
+			// 对于非自闭和标签和有属性的自闭合标签，实际上就是处理开始标签或结束标签的结束符
+			// action 为 delimiter，并弹出回到初始状态
 			[/\/?>/, 'delimiter', '@pop'],
+			// rules 匹配双引号 " 包裹的字符串内容，捕获的内容不包括引号本身
+			// action 为 attribute.value
+			// 例如 type="text/javascript" 中的 text/javascript。
 			[/"([^"]*)"/, 'attribute.value'],
+			// rules 匹配单引号 ' 包裹的字符串内容，捕获的内容不包括引号本身
+			// action 为 attribute.value
+			// 例如 type='text/javascript' 中的 text/javascript。
 			[/'([^']*)'/, 'attribute.value'],
+			// rules 匹配一个或多个字母、数字、下划线 _ 或连字符 -
+			// action 为 attribute.name
+			// 例如 src
 			[/[\w\-]+/, 'attribute.name'],
+			// rules 匹配 =
+			// action 为 delimiter
 			[/=/, 'delimiter'],
 			[/[ \t\r\n]+/] // whitespace
 		],
@@ -179,7 +203,7 @@ export const language = <languages.IMonarchLanguage>{
 
 		// After <script
 		script: [
-			// rules 匹配双引号 " 包裹的字符串内容，捕获的内容不包括引号本身
+			// rules type 字符串
 			// action 为 attribute.name, 并切换到 @scriptAfterType状态
 			[/type/, 'attribute.name', '@scriptAfterType'],
 			// rules 匹配双引号 " 包裹的字符串内容，捕获的内容不包括引号本身
@@ -333,7 +357,7 @@ export const language = <languages.IMonarchLanguage>{
 			// @rematch 标识不消费字符串，回到 script 状态去处理
 			[/<\/script\s*>/, { token: '@rematch', next: '@pop' }]
 		],
-		// scriptEmbedded 中会继续遍历消费字符串
+		//
 		// 如果js 字符串中包含 </script, 弹出为 script 状态，@rematch 标识不消费 字符串
 		// nextEmbedded 标识回到处理 html 的语言上
 		// 即在 script 状态再次以 html 处理方式 </script
