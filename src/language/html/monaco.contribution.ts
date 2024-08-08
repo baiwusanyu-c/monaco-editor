@@ -110,169 +110,19 @@ export interface LanguageServiceDefaults {
 	setOptions(options: Options): void;
 	setModeConfiguration(modeConfiguration: ModeConfiguration): void;
 }
-// --- HTML configuration and defaults ---------
 
-class LanguageServiceDefaultsImpl implements LanguageServiceDefaults {
-	private _onDidChange = new Emitter<LanguageServiceDefaults>();
-	private _options!: Options;
-	private _modeConfiguration!: ModeConfiguration;
-	private _languageId: string;
 
-	constructor(languageId: string, options: Options, modeConfiguration: ModeConfiguration) {
-		this._languageId = languageId;
-		this.setOptions(options);
-		this.setModeConfiguration(modeConfiguration);
-	}
 
-	get onDidChange(): IEvent<LanguageServiceDefaults> {
-		return this._onDidChange.event;
-	}
 
-	get languageId(): string {
-		return this._languageId;
-	}
 
-	get options(): Options {
-		return this._options;
-	}
 
-	get modeConfiguration(): ModeConfiguration {
-		return this._modeConfiguration;
-	}
 
-	setOptions(options: Options): void {
-		this._options = options || Object.create(null);
-		this._onDidChange.fire(this);
-	}
 
-	setModeConfiguration(modeConfiguration: ModeConfiguration): void {
-		this._modeConfiguration = modeConfiguration || Object.create(null);
-		this._onDidChange.fire(this);
-	}
-}
 
-const formatDefaults: Required<HTMLFormatConfiguration> = {
-	tabSize: 4,
-	insertSpaces: false,
-	wrapLineLength: 120,
-	unformatted:
-		'default": "a, abbr, acronym, b, bdo, big, br, button, cite, code, dfn, em, i, img, input, kbd, label, map, object, q, samp, select, small, span, strong, sub, sup, textarea, tt, var',
-	contentUnformatted: 'pre',
-	indentInnerHtml: false,
-	preserveNewLines: true,
-	maxPreserveNewLines: undefined,
-	indentHandlebars: false,
-	endWithNewline: false,
-	extraLiners: 'head, body, /html',
-	wrapAttributes: 'auto'
-};
 
-const optionsDefault: Required<Options> = {
-	format: formatDefaults,
-	suggest: {},
-	data: { useDefaultDataProvider: true }
-};
 
-function getConfigurationDefault(languageId: string): Required<ModeConfiguration> {
-	return {
-		completionItems: true,
-		hovers: true,
-		documentSymbols: true,
-		links: true,
-		documentHighlights: true,
-		rename: true,
-		colors: true,
-		foldingRanges: true,
-		selectionRanges: true,
-		diagnostics: languageId === htmlLanguageId, // turned off for Razor and Handlebar
-		documentFormattingEdits: languageId === htmlLanguageId, // turned off for Razor and Handlebar
-		documentRangeFormattingEdits: languageId === htmlLanguageId // turned off for Razor and Handlebar
-	};
-}
 
-const htmlLanguageId = 'html';
-const handlebarsLanguageId = 'handlebars';
-const razorLanguageId = 'razor';
 
-export const htmlLanguageService = registerHTMLLanguageService(
-	htmlLanguageId,
-	optionsDefault,
-	getConfigurationDefault(htmlLanguageId)
-);
-export const htmlDefaults = htmlLanguageService.defaults;
-
-export const handlebarLanguageService = registerHTMLLanguageService(
-	handlebarsLanguageId,
-	optionsDefault,
-	getConfigurationDefault(handlebarsLanguageId)
-);
-export const handlebarDefaults = handlebarLanguageService.defaults;
-
-export const razorLanguageService = registerHTMLLanguageService(
-	razorLanguageId,
-	optionsDefault,
-	getConfigurationDefault(razorLanguageId)
-);
-export const razorDefaults = razorLanguageService.defaults;
-
-// export to the global based API
-(<any>languages).html = {
-	htmlDefaults,
-	razorDefaults,
-	handlebarDefaults,
-	htmlLanguageService,
-	handlebarLanguageService,
-	razorLanguageService,
-	registerHTMLLanguageService
-};
-
-// --- Registration to monaco editor ---
-
-declare var AMD: any;
-declare var require: any;
-
-function getMode(): Promise<typeof mode> {
-	if (AMD) {
-		return new Promise((resolve, reject) => {
-			require(['vs/language/html/htmlMode'], resolve, reject);
-		});
-	} else {
-		return import('./htmlMode');
-	}
-}
-
-export interface LanguageServiceRegistration extends IDisposable {
-	readonly defaults: LanguageServiceDefaults;
-}
-
-/**
- * Registers a new HTML language service for the languageId.
- * Note: 'html', 'handlebar' and 'razor' are registered by default.
- *
- * Use this method to register additional language ids with a HTML service.
- * The language server has to be registered before an editor model is opened.
- */
-export function registerHTMLLanguageService(
-	languageId: string,
-	options: Options = optionsDefault,
-	modeConfiguration: ModeConfiguration = getConfigurationDefault(languageId)
-): LanguageServiceRegistration {
-	const defaults = new LanguageServiceDefaultsImpl(languageId, options, modeConfiguration);
-	let mode: IDisposable | undefined;
-
-	// delay the initalization of the mode until the language is accessed the first time
-	const onLanguageListener = languages.onLanguage(languageId, async () => {
-		mode = (await getMode()).setupMode(defaults);
-	});
-	return {
-		defaults,
-		dispose() {
-			onLanguageListener.dispose();
-			mode?.dispose();
-			mode = undefined;
-		}
-	};
-}
 
 export interface HTMLDataConfiguration {
 	/**
@@ -327,3 +177,190 @@ export interface MarkupContent {
 	readonly value: string;
 }
 export declare type MarkupKind = 'plaintext' | 'markdown';
+
+
+
+
+
+
+
+
+
+
+
+
+
+// --- HTML configuration and defaults ---------
+
+class LanguageServiceDefaultsImpl implements LanguageServiceDefaults {
+	private _onDidChange = new Emitter<LanguageServiceDefaults>();
+	private _options!: Options;
+	private _modeConfiguration!: ModeConfiguration;
+	private _languageId: string;
+
+	constructor(languageId: string, options: Options, modeConfiguration: ModeConfiguration) {
+		this._languageId = languageId;
+		this.setOptions(options);
+		this.setModeConfiguration(modeConfiguration);
+	}
+
+	get onDidChange(): IEvent<LanguageServiceDefaults> {
+		return this._onDidChange.event;
+	}
+
+	get languageId(): string {
+		return this._languageId;
+	}
+
+	get options(): Options {
+		return this._options;
+	}
+
+	get modeConfiguration(): ModeConfiguration {
+		return this._modeConfiguration;
+	}
+
+	setOptions(options: Options): void {
+		this._options = options || Object.create(null);
+		this._onDidChange.fire(this);
+	}
+
+	setModeConfiguration(modeConfiguration: ModeConfiguration): void {
+		this._modeConfiguration = modeConfiguration || Object.create(null);
+		this._onDidChange.fire(this);
+	}
+}
+
+
+const formatDefaults: Required<HTMLFormatConfiguration> = {
+	tabSize: 4,
+	insertSpaces: false,
+	wrapLineLength: 120,
+	unformatted:
+		'default": "a, abbr, acronym, b, bdo, big, br, button, cite, code, dfn, em, i, img, input, kbd, label, map, object, q, samp, select, small, span, strong, sub, sup, textarea, tt, var',
+	contentUnformatted: 'pre',
+	indentInnerHtml: false,
+	preserveNewLines: true,
+	maxPreserveNewLines: undefined,
+	indentHandlebars: false,
+	endWithNewline: false,
+	extraLiners: 'head, body, /html',
+	wrapAttributes: 'auto'
+};
+
+const optionsDefault: Required<Options> = {
+	format: formatDefaults,
+	suggest: {},
+	data: { useDefaultDataProvider: true }
+};
+
+function getConfigurationDefault(languageId: string): Required<ModeConfiguration> {
+	return {
+		completionItems: true,
+		hovers: true,
+		documentSymbols: true,
+		links: true,
+		documentHighlights: true,
+		rename: true,
+		colors: true,
+		foldingRanges: true,
+		selectionRanges: true,
+		diagnostics: languageId === htmlLanguageId, // turned off for Razor and Handlebar
+		documentFormattingEdits: languageId === htmlLanguageId, // turned off for Razor and Handlebar
+		documentRangeFormattingEdits: languageId === htmlLanguageId // turned off for Razor and Handlebar
+	};
+}
+
+const htmlLanguageId = 'html';
+const handlebarsLanguageId = 'handlebars';
+const razorLanguageId = 'razor';
+
+// api
+export const htmlLanguageService = registerHTMLLanguageService(
+	htmlLanguageId,
+	optionsDefault,
+	getConfigurationDefault(htmlLanguageId)
+);
+// api
+export const htmlDefaults = htmlLanguageService.defaults;
+// api
+export const handlebarLanguageService = registerHTMLLanguageService(
+	handlebarsLanguageId,
+	optionsDefault,
+	getConfigurationDefault(handlebarsLanguageId)
+);
+// api
+export const handlebarDefaults = handlebarLanguageService.defaults;
+// api
+export const razorLanguageService = registerHTMLLanguageService(
+	razorLanguageId,
+	optionsDefault,
+	getConfigurationDefault(razorLanguageId)
+);
+// api
+export const razorDefaults = razorLanguageService.defaults;
+
+// export to the global based API
+(<any>languages).html = {
+	htmlDefaults,
+	htmlLanguageService,
+
+	handlebarDefaults,
+	handlebarLanguageService,
+
+	razorDefaults,
+	razorLanguageService,
+	registerHTMLLanguageService
+};
+
+// --- Registration to monaco editor ---
+
+declare var AMD: any;
+declare var require: any;
+
+function getMode(): Promise<typeof mode> {
+	if (AMD) {
+		return new Promise((resolve, reject) => {
+			require(['vs/language/html/htmlMode'], resolve, reject);
+		});
+	} else {
+		return import('./htmlMode');
+	}
+}
+
+export interface LanguageServiceRegistration extends IDisposable {
+	readonly defaults: LanguageServiceDefaults;
+}
+
+/**
+ * // 根据 languageId 注册语言服务
+ * Registers a new HTML language service for the languageId.
+ * // 默认情况下 'html', 'handlebar' and 'razor' 已经被注册了
+ * Note: 'html', 'handlebar' and 'razor' are registered by default.
+ * 使用此方法向 HTML 服务注册其他语言 ID。
+ * 在打开编辑器模型之前，必须注册语言服务器
+ * Use this method to register additional language ids with a HTML service.
+ * The language server has to be registered before an editor model is opened.
+ */
+export function registerHTMLLanguageService(
+	languageId: string,
+	options: Options = optionsDefault,
+	modeConfiguration: ModeConfiguration = getConfigurationDefault(languageId)
+): LanguageServiceRegistration {
+	const defaults = new LanguageServiceDefaultsImpl(languageId, options, modeConfiguration);
+	let mode: IDisposable | undefined;
+
+	// delay the initalization of the mode until the language is accessed the first time
+	const onLanguageListener = languages.onLanguage(languageId, async () => {
+		mode = (await getMode()).setupMode(defaults);
+	});
+	return {
+		defaults,
+		dispose() {
+			onLanguageListener.dispose();
+			mode?.dispose();
+			mode = undefined;
+		}
+	};
+}
+
