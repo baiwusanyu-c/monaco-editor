@@ -25,19 +25,30 @@ const EMPTY_ELEMENTS: string[] = [
 ];
 
 export const conf: languages.LanguageConfiguration = {
+	// 用于单词的正则表达式，
+	// 当用户在编辑器中双击选择单词、跳转到单词、或者进行其他单词级别的操作时，编辑器会使用 wordPattern 来识别这些单词,
+	// 这里的震泽是两个捕获组，分别捕获
+	// * 浮点数（可能包含负号和字母后缀）。
+	// * 由非特殊字符（如字母、数字、下划线等）组成的单词。
 	wordPattern: /(-?\d*\.\d\w*)|([^\`\~\!\@\$\^\&\*\(\)\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\s]+)/g,
 
+	// 定义注释
 	comments: {
+		// 块级注释
 		blockComment: ['<!--', '-->']
+		// 行内注释
+		// lineComment: '//'
 	},
-
+	// 定义括号对，用于匹配和自动补全
+	// 编辑器将识别并高亮这些成对的符号。例如，当光标位于一个 { 上时，相应的 } 也会被高亮。
 	brackets: [
 		['<!--', '-->'],
 		['<', '>'],
 		['{', '}'],
 		['(', ')']
 	],
-
+  // 定义自动闭合对
+	// 当用户输入左符号时，编辑器会自动插入右符号。
 	autoClosingPairs: [
 		{ open: '{', close: '}' },
 		{ open: '[', close: ']' },
@@ -46,6 +57,9 @@ export const conf: languages.LanguageConfiguration = {
 		{ open: "'", close: "'" }
 	],
 
+	// 定义包围对
+	// 用于定义哪些符号对可以用来包围选中的文本。
+	// 用户在选中一段文本后，可以使用这些符号对将其选中的文本包围。
 	surroundingPairs: [
 		{ open: '"', close: '"' },
 		{ open: "'", close: "'" },
@@ -55,15 +69,30 @@ export const conf: languages.LanguageConfiguration = {
 		{ open: '<', close: '>' }
 	],
 
+	// 定义在按下回车键时，自动缩进和插入内容的规则。
 	onEnterRules: [
 		{
+			// 当光标前的文字匹配这个正则匹配时触发执行操作
+			// beforeText:
+			// * < 匹配字符 <。
+			// * (?!(?:${EMPTY_ELEMENTS.join('|')}))：负向前瞻，确保接下来的内容不属于 EMPTY_ELEMENTS 列表中的元素。
+			// * ([_:\\w][_:\\w-.\\d]*)：匹配标签名称，允许字母、数字、下划线、冒号和破折号。
+			// * ([^/>]*(?!/)>)[^<]*$：匹配标签内部内容，确保没有闭合标签 /，且以 > 结尾。
+			// 示例: <div>、<custom-tag>。
 			beforeText: new RegExp(
 				`<(?!(?:${EMPTY_ELEMENTS.join('|')}))([_:\\w][_:\\w-.\\d]*)([^/>]*(?!/)>)[^<]*$`,
 				'i'
 			),
+			// 当光标后的文字匹配这个正则匹配时触发执行操作
+			// * ^<\/：匹配以 </ 开头。
+			// * ([_:\w][_:\w-.\d]*)：匹配标签名称。
+			// * \s*>$：匹配可选的空格和 >，且必须以 > 结尾。
+			// 示例: </div>、</custom-tag
 			afterText: /^<\/([_:\w][_:\w-.\d]*)\s*>$/i,
+			// 要执行的操作
 			action: {
-				indentAction: languages.IndentAction.IndentOutdent
+				// 当光标位置前后文本符合 beforeText 和 afterText，按下回车自动缩进
+				indentAction: languages.IndentAction.IndentOutdent,
 			}
 		},
 		{
@@ -71,16 +100,58 @@ export const conf: languages.LanguageConfiguration = {
 				`<(?!(?:${EMPTY_ELEMENTS.join('|')}))(\\w[\\w\\d]*)([^/>]*(?!/)>)[^<]*$`,
 				'i'
 			),
+			// <div>
+			//     <span|>
+			// </div>
+			// 触发缩进
+			// <div>
+			//     <span>
+			//         |
+			//     </span>
+			// </div>
 			action: { indentAction: languages.IndentAction.Indent }
 		}
 	],
 
+	// 折叠配置
 	folding: {
+		// 描述特定于语言的折叠标记，如“#region”和“#endregion”。
 		markers: {
 			start: new RegExp('^\\s*<!--\\s*#region\\b.*-->'),
 			end: new RegExp('^\\s*<!--\\s*#endregion\\b.*-->')
 		}
+		// 指定空行属于上一个块还是当前块
+		// TODO: 具体表现？
+		// offSide?: boolean
 	}
+
+	// 定义文档注释，比如 jsDoc
+	// interface IDocComment {
+	// 		 注释文档结束的字符串 比如 '*/'
+	//     close?: string;
+	// 		 注释文档开始的字符串 比如 '/**'
+	//     open: string;
+	// }
+	// __electricCharacterSupport?: {
+	// 	docComment?: IDocComment;
+	// };
+
+	// 定义自动闭合符号前的字符。这些字符前的符号会自动闭合
+	// 例如配合 autoClosingPairs 会导致当输入 '('时
+	// 如果用户输入了符合 autoCloseBefore 的内容，比如输入空格
+	// 编辑器会自动 补全一个 ')'
+	// autoCloseBefore?: string;
+
+	// 定义一个括号对列表，这些括号对根据其嵌套级别着色。
+	// 如果没有设置，将使用已配置的括号。
+	// colorizedBracketPairs?: CharacterPair[];
+
+	// indentationRules: 定义缩进规则。
+	// increaseIndentPattern: 增加缩进的正则表达式。
+	// decreaseIndentPattern: 减少缩进的正则表达式。
+	// indentNextLinePattern: 定义下一行应当缩进的正则表达式。
+	// unIndentedLinePattern: 定义不应当缩进的行的正则表达式。
+	// indentationRules?: IndentationRule;
 };
 
 // bwsy: monaco 编辑其使用 language 中的正则来匹配字符串，实际上也是优先状态机实现的

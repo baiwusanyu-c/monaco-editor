@@ -84,7 +84,7 @@ Many Monaco related objects often implement the `.dispose()` method. This method
 - Explore the [API docs](https://microsoft.github.io/monaco-editor/docs.html) or read them straight from [`monaco.d.ts`](https://github.com/microsoft/monaco-editor/blob/gh-pages/node_modules/monaco-editor/monaco.d.ts).
  //  bwsy: ✅集成指南
 - Read [this guide](https://github.com/microsoft/monaco-editor/wiki/Accessibility-Guide-for-Integrators) to ensure the editor is accessible to all your users!
-  //  bwsy: 4🎯创建 Monarch tokenizer 来实现一个新的编程语言支持
+  //  bwsy: ✅创建 Monarch tokenizer 来实现一个新的编程语言支持
 - Create a Monarch tokenizer for a new programming language [in the Monarch playground](https://microsoft.github.io/monaco-editor/monarch.html).
 - Ask questions on [StackOverflow](https://stackoverflow.com/questions/tagged/monaco-editor)! Search open and closed issues, there are a lot of tips in there!
 
@@ -142,3 +142,7 @@ This project has adopted the [Microsoft Open Source Code of Conduct](https://ope
 ## License
 
 Licensed under the [MIT](https://github.com/microsoft/monaco-editor/blob/main/LICENSE.txt) License.
+
+## TODO: bwsy - monaco-editor-core 源码
+## TODO: bwsy - monaco-editor 源码
+## TODO: bwsy - monaco-editor api 全解 + 实践用例

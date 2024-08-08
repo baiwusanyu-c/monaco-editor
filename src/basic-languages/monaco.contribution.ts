@@ -2,7 +2,7 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-
+// bwsy: 引入语言集，引入即自动注册语言
 import './abap/abap.contribution';
 import './apex/apex.contribution';
 import './azcli/azcli.contribution';
